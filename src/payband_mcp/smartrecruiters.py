@@ -106,4 +106,12 @@ def fetch_pay(company: str, posting_id: str) -> dict[str, Any] | None:
         for section in sections.values()
         if isinstance(section, dict)
     )
-    return money.parse(content)
+    posting_location = data.get("location") or {}
+    location = ""
+    if isinstance(posting_location, dict):
+        location = (
+            posting_location.get("fullLocation")
+            or posting_location.get("country")
+            or ""
+        )
+    return money.parse(content, location=location if isinstance(location, str) else "")
