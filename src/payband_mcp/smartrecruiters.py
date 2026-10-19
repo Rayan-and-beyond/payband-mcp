@@ -92,6 +92,20 @@ def list_postings(
             return
 
 
+def format_location(location: Any) -> str:
+    """Use the same location label for list results and detail pay parsing."""
+    if not isinstance(location, dict):
+        return ""
+    full = location.get("fullLocation")
+    if isinstance(full, str) and full.strip():
+        return full
+    return ", ".join(
+        part
+        for key in ("city", "region", "country")
+        if isinstance((part := location.get(key)), str) and part.strip()
+    )
+
+
 def fetch_pay(company: str, posting_id: str) -> dict[str, Any] | None:
     """Read a published range from the sections of one posting detail."""
     try:
@@ -106,12 +120,4 @@ def fetch_pay(company: str, posting_id: str) -> dict[str, Any] | None:
         for section in sections.values()
         if isinstance(section, dict)
     )
-    posting_location = data.get("location") or {}
-    location = ""
-    if isinstance(posting_location, dict):
-        location = (
-            posting_location.get("fullLocation")
-            or posting_location.get("country")
-            or ""
-        )
-    return money.parse(content, location=location if isinstance(location, str) else "")
+    return money.parse(content, location=format_location(data.get("location")))
